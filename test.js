@@ -9,28 +9,34 @@ devices.push(device({
   name: 'clock',
   type: 'clock',
   n_ports: 1,
-  instructions: [FLIP,FLOP]
+  instructions: [WRITE_PORT(0,1),WRITE_PORT(0,0)]
 }))
 devices.push(device({
   name: 'div2',
   n_ports: 2,
-  instructions: [FLIM,FLOM]
+  instructions: [WRITE_PORT(1,1),WRITE_PORT(1,0)]
 }))
 devices.push(device({
   name: 'div4',
   n_ports: 2,
-  instructions: [FLIM,NOP,FLOM,NOP]
+  instructions: [WRITE_PORT(1,1),NOP,WRITE_PORT(1,0),NOP]
 }))
 devices.push(device({
   name: 'div4-2',
   n_ports: 2,
-  instructions: [FLIM,FLOM]
+  instructions: [WRITE_PORT(1,1),WRITE_PORT(1,0)]
 }))
 devices.push(device({
   name: 'DBBLER',
   n_ports: 3,
   memory_size: 2,
-  instructions: [LOAD_MEM(1,1),WRITE_MEM_TO_PORT(1,2),DOUBLE_MEM1,WRITE_MEM_TO_PORT(1,2),JMP_OFFSET(-2)],
+  instructions: [
+    WRITE_MEM(1,1),
+    WRITE_MEM_TO_PORT(1,2),
+    SHIFT_LEFT_MEM(1),
+    WRITE_MEM_TO_PORT(1,2),
+    JMP_OFFSET(-2)
+  ],
   verbose: true
 }))
 
@@ -68,36 +74,31 @@ while(n--){
     var index = d.to[1]
     devices[d.to[0]].set_port(value, index)
   })
-  // devices.forEach(function(d){ console.log(d.state()) })
 }
 
 probes.forEach(function(p){ console.log(p.status()) })
 
-function NOP(ports){}
-
-function FLIP(ports){ ports[0] = 1 }
-function FLOP(ports){ ports[0] = 0 }
-
-function FLIM(ports){ ports[1] = 1 }
-function FLOM(ports){ ports[1] = 0 }
-
-function BRANCH_IF_NOT_ZERO(ports,memory) { if(ports[1] !== 0){ memory[0] += 2 } }
-function JMP_MINUS_1(ports,memory) { memory[0] -= 2 }
-function JMP_MINUS_2(ports,memory) { memory[0] -= 3 }
-function LOAD_MEM1_1(ports,memory) { memory[1] = 1 }
-function DOUBLE_MEM1(ports,memory) { memory[1] = memory[1] << 1 }
-// function WRITE_MEM1_PORT2(ports,memory) { ports[2] = memory[1] }
-
 //
-function LOAD_MEM(index,value){
-  return function LOAD_MEM(ports,memory) { memory[index] = value }
-}
-function JMP_OFFSET(offset){ return function JMP_OFFSET(ports,memory) { memory[0] += offset-1 } }
-function JMP_DIRECT(address){ return function JMP_DIRECT(ports,memory) { memory[0] -= address-1 } }
+// TODO need branching
+// JMP_IF_EQUAL(_OFFSET/DIRECT)
 
-function WRITE_MEM_TO_PORT(mem_index, port_index){
-  return function WRITE_MEM_TO_PORT(ports,memory) { ports[port_index] = memory[mem_index] }
-}
-function WRITE_PORT_TO_MEM(port_index, mem_index){
-  return function WRITE_PORT_TO_MEM(ports,memory) { memory[mem_index] = port[port_index] }
-}
+// NOP
+function NOP(){}
+
+// Write direct values
+function WRITE_MEM(index,value){ return function WRITE_MEM(ports,memory) { memory[index] = value } }
+function WRITE_PORT(index,value){ return function LOAD_MEM(ports,memory) { ports[index] = value } }
+
+// Jumping around
+function JMP_OFFSET(offset){ return function JMP_OFFSET(ports,memory) { memory[0] += offset-1 } }
+function JMP_DIRECT(address){ return function JMP_DIRECT(ports,memory) { memory[0] = address-1 } }
+
+// memory to port IO
+function WRITE_MEM_TO_PORT(mem_index, port_index){ return function WRITE_MEM_TO_PORT(ports,memory) { ports[port_index] = memory[mem_index] } }
+function WRITE_PORT_TO_MEM(port_index, mem_index){ return function WRITE_PORT_TO_MEM(ports,memory) { memory[mem_index] = port[port_index] } }
+
+// math operations on memory addresses
+function SHIFT_LEFT_MEM(mem_index){ return function SHIFT_LEFT_MEM(ports,memory) { memory[mem_index] = memory[mem_index] << 1 } }
+function SHIFT_RIGHT_MEM(mem_index){ return function SHIFT_RIGHT_MEM(ports,memory) { memory[mem_index] = memory[mem_index] >> 1 } }
+function INC_MEM(mem_index){ return function INC_MEM(ports, memory) { memory[mem_index] += 1 }  }
+function DEC_MEM(mem_index){ return function INC_MEM(ports, memory) { memory[mem_index] += 1 }  }

@@ -33,7 +33,7 @@ module.exports = function device(options){
       // perform instruction
       instructions[memory[0]](ports, memory)
 
-      // increment instruction counter
+      // increment instruction counter by the length of the
       memory[0] += 1
 
       // reset the counter if the counter is > than the instructions length
