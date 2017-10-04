@@ -10,10 +10,10 @@ A list of devices that do things when input ports change.
 [ Device ]
 
      ------
- CLK |    |
-     |    | PORT
-PORT |    |
-     |    |
+     |    | CLK(PORT0)
+     |    | PORT1
+PORT2|    |
+     |MEM0|
      ------
 ```
 
