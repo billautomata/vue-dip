@@ -18,7 +18,7 @@ module.exports = function device(options){
   }
 
   function set_port(v,i){
-    if(verbose){ console.log(name, 'setting port', i, 'with value', v) }
+    // if(verbose){ console.log(name, 'setting port', i, 'with value', v) }
     ports[i] = v
   }
   function get_ports(){

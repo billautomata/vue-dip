@@ -30,7 +30,7 @@ devices.push(device({
   name: 'DBBLER',
   n_ports: 3,
   memory_size: 2,
-  instructions: [LOAD,BRANCH_IF_NOT_ZERO,JMP_MINUS_1,DOUBLE,WRITE,JMP_MINUS_2],
+  instructions: [LOAD_MEM(1,1),WRITE_MEM_TO_PORT(1,2),DOUBLE_MEM1,WRITE_MEM_TO_PORT(1,2),JMP_OFFSET(-2)],
   verbose: true
 }))
 
@@ -47,11 +47,13 @@ devices.forEach(function(device,device_index){
   }
 })
 connections.push({ from: [1,1], to: [3,0] }) // overwrite the clock signal to the div4-2
-connections.push({ from: [2,1], to: [4,1] }) // send div4 port 1 to dbbler port 1
+connections.push({ from: [1,1], to: [4,1] }) // send div4 port 1 to dbbler port 1
 
 console.log('connections\n', connections)
 
-var n = 48
+var cycles = 14
+
+var n = 2 + (cycles*2)
 while(n--){
   // console.log('running probes')
   probes.forEach(function(p){ p.probe(devices) })
@@ -81,7 +83,21 @@ function FLOM(ports){ ports[1] = 0 }
 
 function BRANCH_IF_NOT_ZERO(ports,memory) { if(ports[1] !== 0){ memory[0] += 2 } }
 function JMP_MINUS_1(ports,memory) { memory[0] -= 2 }
-function LOAD(ports,memory) { memory[1] = 1 }
-function DOUBLE(ports,memory) { memory[1] += memory[1] }
-function WRITE(ports,memory) { ports[2] = memory[1] }
 function JMP_MINUS_2(ports,memory) { memory[0] -= 3 }
+function LOAD_MEM1_1(ports,memory) { memory[1] = 1 }
+function DOUBLE_MEM1(ports,memory) { memory[1] = memory[1] << 1 }
+// function WRITE_MEM1_PORT2(ports,memory) { ports[2] = memory[1] }
+
+//
+function LOAD_MEM(index,value){
+  return function LOAD_MEM(ports,memory) { memory[index] = value }
+}
+function JMP_OFFSET(offset){ return function JMP_OFFSET(ports,memory) { memory[0] += offset-1 } }
+function JMP_DIRECT(address){ return function JMP_DIRECT(ports,memory) { memory[0] -= address-1 } }
+
+function WRITE_MEM_TO_PORT(mem_index, port_index){
+  return function WRITE_MEM_TO_PORT(ports,memory) { ports[port_index] = memory[mem_index] }
+}
+function WRITE_PORT_TO_MEM(port_index, mem_index){
+  return function WRITE_PORT_TO_MEM(ports,memory) { memory[mem_index] = port[port_index] }
+}

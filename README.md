@@ -11,18 +11,12 @@ A list of devices that do things when input ports change.
 
      ------
      |    | CLK(PORT0)
+     |    |
      |    | PORT1
 PORT2|    |
-     |MEM0|
+     |MEM0| PORT3
+     |MEM1|
+     |MEM2| PORT4
+     |MEM3|
      ------
-```
-
-On tick
-* device compares the value of the clock to the previous value, if changed perform an action
-  * on fall, on rise
-
-```javascript
-
-
-
 ```
