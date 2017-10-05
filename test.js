@@ -36,15 +36,30 @@ devices.push(device({
     SHIFT_LEFT_MEM(1),
     WRITE_MEM_TO_PORT(1,2),
     JMP_OFFSET(-2)
+  ]
+}))
+devices.push(device({
+  name: 'BRNCHR',
+  n_ports: 2,
+  memory_size: 2,
+  instructions: [
+    WRITE_MEM(1,0),
+    INC_MEM(1),
+    BEQ(1,10),
+    JMP_DIRECT(1),
+    WRITE_MEM_TO_PORT(1,1),
+    NOP(),
+    JMP_OFFSET(-1)
   ],
   verbose: true
 }))
 
-probes.push(probe({name:'clock',device_index:0,port_index:0}))
-probes.push(probe({name:'div2',device_index:1,port_index:1}))
-probes.push(probe({name:'div4',device_index:2,port_index:1}))
-probes.push(probe({name:'div4-2',device_index:3,port_index:1}))
-probes.push(probe({name:'DBBLER',device_index:4,port_index:2}))
+// probes.push(probe({name:'clock',device_index:0,port_index:0}))
+// probes.push(probe({name:'div2',device_index:1,port_index:1}))
+// probes.push(probe({name:'div4',device_index:2,port_index:1}))
+// probes.push(probe({name:'div4-2',device_index:3,port_index:1}))
+// probes.push(probe({name:'DBBLER',device_index:4,port_index:2}))
+probes.push(probe({name:'BRNCHR',device_index:5,port_index:1}))
 
 // connect the clock to port[0] of all the other devices
 devices.forEach(function(device,device_index){
@@ -57,7 +72,7 @@ connections.push({ from: [1,1], to: [4,1] }) // send div4 port 1 to dbbler port 
 
 console.log('connections\n', connections)
 
-var cycles = 14
+var cycles = 64
 
 var n = 2 + (cycles*2)
 while(n--){
@@ -78,57 +93,20 @@ while(n--){
 
 probes.forEach(function(p){ console.log(p.status()) })
 
-var instruction_lut = [
-  'NOP',
-  'WRITE_MEM',
-  'WRITE_PORT',
-  'JMP_OFFSET',
-  'JMP_DIRECT',
-  'WRITE_MEM_TO_PORT',
-  'WRITE_PORT_TO_MEM',
-  'SHIFT_LEFT_MEM',
-  'SHIFT_RIGHT_MEM',
-  'INC_MEM',
-  'DEC_MEM',
-]
+// BEQ_MEM (index, value)
+// BNEQ_****
+// BGT_
+// BLT_
 
-var instructions = [
-  { fn: NOP, args: 0 },
-  { fn: WRITE_MEM, args: 2 },
-  { fn: WRITE_PORT, args: 2 },
-  { fn: JMP_OFFSET, args: 1 },
-  { fn: JMP_DIRECT, args: 1 },
-  { fn: WRITE_MEM_TO_PORT, args: 2 },
-  { fn: WRITE_PORT_TO_MEM, args: 2 },
-  { fn: SHIFT_LEFT_MEM, args: 1 },
-  { fn: SHIFT_RIGHT_MEM, args: 1 },
-  { fn: INC_MEM, args: 1 },
-  { fn: DEC_MEM, args: 1 },
-]
+function BEQ (index, value) { return function BEQ(ports,memory) { if(memory[index] === value) { memory[0] += 1 } }}
+function BNEQ (index, value) { return function BNEQ(ports,memory) { if(memory[index] !== value) { memory[0] += 1 } }}
+function BGT (index, value) { return function BGT(ports,memory) { if(memory[index] > value) { memory[0] += 1 } }}
+function BLT (index, value) { return function BLT(ports,memory) { if(memory[index] < value) { memory[0] += 1 } }}
 
-//
-var machine_code = [0,0,0,1,1,0,0]
-var fns = []
-var idx = 0
-var instruction = {}
-while(idx < machine_code.length){
-  instruction = instructions[machine_code[idx]]
-  console.log([idx, machine_code.length, instruction_lut[machine_code[idx]],instruction.args].join('\t'))
-  if(instruction.args === 0){
-    fns.push(instruction.fn())
-  } else if (instruction.args === 1) {
-    fns.push(instruction.fn(machine_code[idx+1]))
-  } else if (instruction.args === 2) {
-    fns.push(instruction.fn(machine_code[idx+1], machine_code[idx+2]))
-  }
-  idx += instruction.args + 1
-}
-console.log(fns)
-
-
-//
-// TODO need branching
-// JMP_IF_EQUAL(_OFFSET/DIRECT)
+// function BEQ_PORT (index, value) { return function BEQ_PORT(ports,memory) { if(ports[index] === value) { memory[0] += 1 } }}
+// function BNEQ_PORT (index, value) { return function BNEQ_PORT(ports,memory) { if(ports[index] !== value) { memory[0] += 1 } }}
+// function BGT_PORT (index, value) { return function BGT_PORT(ports,memory) { if(ports[index] > value) { memory[0] += 1 } }}
+// function BLT_PORT (index, value) { return function BLT_PORT(ports,memory) { if(ports[index] < value) { memory[0] += 1 } }}
 
 // NOP
 function NOP(){ return function NOP(){} }
