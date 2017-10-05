@@ -1,3 +1,5 @@
+var I = require('../../instructions.js')
+
 module.exports = function device(options){
   // IO
   var verbose = false
@@ -26,18 +28,33 @@ module.exports = function device(options){
   }
 
   var instructions = options.instructions
+  console.log(name, 'instructions', instructions)
 
   function tick(){
+    // if(verbose) { console.log(name, 'tick', ports[0], memory[0]) }
     if(ports[0] === 1 && CLOCK_PREV === 0 || type === 'clock'){
-      if(verbose) { console.log(name, 'running instruction', memory[0], instructions[memory[0]]) }
-      // perform instruction
-      instructions[memory[0]](ports, memory)
 
+      // perform instruction
+      var instruction_value = instructions[memory[0]]
+      // console.log('\ninstruction value', instruction_value, 'memory value', memory[0])
+      var fn = I.fns[I.lut[instruction_value]]
+      var args = I.array[instruction_value].args
+      if(args === 0){
+        // console.log(fn, I.array[instruction_value].fn)
+        fn()(ports,memory)
+      } else if (args === 1) {
+        // console.log(fn, I.array[instruction_value].fn, instructions[memory[0]+1])
+        fn(instructions[memory[0]+1])(ports,memory)
+      } else if (args === 2) {
+        // console.log(fn, I.array[instruction_value].fn, instructions[memory[0]+1], instructions[memory[0]+2])
+        fn(instructions[memory[0]+1], instructions[memory[0]+2])(ports,memory)
+      }
+      memory[0] += args + 1
       // increment instruction counter by the length of the
-      memory[0] += 1
 
       // reset the counter if the counter is > than the instructions length
       if(memory[0] >= options.instructions.length){
+        // if(verbose) { console.log('looping back') }
         memory[0] = 0
       }
     }
