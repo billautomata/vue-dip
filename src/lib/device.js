@@ -1,4 +1,5 @@
-var I = require('../../instructions.js')
+var assembler = require('./assembler')
+var I = require('./instructions.js')
 
 module.exports = function device(options){
   // IO
@@ -27,7 +28,8 @@ module.exports = function device(options){
     return ports
   }
 
-  var instructions = options.instructions
+  var source_code = options.instructions
+  var instructions = assembler(options.instructions)
   console.log(name, 'instructions', instructions)
 
   function tick(){
@@ -63,12 +65,14 @@ module.exports = function device(options){
 
   function state(){
     // console.log([name, 'signal', ports[0], 'prev', CLOCK_PREV, memory[0], JSON.stringify(ports)].join('\t'))
-    return [name, JSON.stringify(ports)].join('\t')
+    return [name, JSON.stringify(ports), JSON.stringify(memory)].join('\t')
   }
 
   return {
     set_port: set_port,
-    get_ports: get_ports,
+    get_ports: function() { return ports },
+    get_memory: function() { return memory },
+    get_source: function() { return source_code },
     tick: tick,
     state: state
   }

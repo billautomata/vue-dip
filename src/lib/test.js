@@ -14,11 +14,11 @@ devices.push(device({
   instructions: assembler(['WRITE_PORT 0 1', 'WRITE_PORT 0 0']),
   verbose: true
 }))
-// devices.push(device({
-//   name: 'div2',
-//   n_ports: 2,
-//   instructions: ['WRITE_PORT 1 1', 'WRITE_PORT 1 0']
-// }))
+devices.push(device({
+  name: 'div2',
+  n_ports: 2,
+  instructions: assembler(['WRITE_PORT 1 1', 'NOP', 'WRITE_PORT 1 0', 'NOP'])
+}))
 // devices.push(device({
 //   name: 'div4',
 //   n_ports: 2,
@@ -52,7 +52,7 @@ devices.push(device({
     'WRITE_MEM 1 244',
     'WRITE_PORT 1 3',
     'BEQ 1 244',
-    'NOP',   // not true    
+    'NOP',                // not true
     'INC_MEM 1',          // true
     'END:',
     'WRITE_MEM_TO_PORT 1 1',
@@ -60,12 +60,12 @@ devices.push(device({
   ]),
 }))
 
-// probes.push(probe({name:'clock',device_index:0,port_index:0}))
-// probes.push(probe({name:'div2',device_index:1,port_index:1}))
+probes.push(probe({name:'clock',device_index:0,port_index:0}))
+probes.push(probe({name:'div2',device_index:1,port_index:1}))
 // probes.push(probe({name:'div4',device_index:2,port_index:1}))
 // probes.push(probe({name:'div4-2',device_index:3,port_index:1}))
 // probes.push(probe({name:'DBBLER',device_index:4,port_index:2}))
-probes.push(probe({name:'BRNCHR',device_index:1,port_index:1}))
+probes.push(probe({name:'BRNCHR',device_index:2,port_index:1}))
 
 // connect the clock to port[0] of all the other devices
 devices.forEach(function(device,device_index){
